@@ -1,0 +1,52 @@
+# Create a pod that reads and writes to the
+# NFS server via an NFS volume.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: candle 
+spec:
+  selector:
+    matchLabels:
+      run: candle 
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        run: candle 
+    spec:
+      volumes:
+      - name: nfs-volume
+        nfs: 
+         server: 10.42.94.55 
+         path: /candle2
+      containers:
+      - name: candle 
+        image: 10.42.94.112:30500/nginx 
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: nfs-volume
+          mountPath: /usr/share/nginx/html
+      imagePullSecrets:
+      - name: regcred
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: candle
+  labels:
+    run: candle
+spec:
+  type: NodePort
+  ports:
+  - port: 8080
+    targetPort: 80
+    nodePort: 30080
+    protocol: TCP
+    name: http
+  - port: 443
+    protocol: TCP
+    name: https
+  selector:
+    run: candle 
