@@ -1,0 +1,47 @@
+# Create a pod that reads and writes to the
+# NFS server via an NFS volume.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: registry 
+spec:
+  selector:
+    matchLabels:
+      run: registry 
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        run: registry 
+    spec:
+      volumes:
+      - name: nfs-volume
+        nfs: 
+         server: 10.42.94.55 
+         path: /candle2
+      containers:
+      - name: registry 
+        image: registry
+        imagePullPolicy: IfNotPresent 
+        ports:
+        - containerPort: 5000
+        volumeMounts:
+        - name: nfs-volume
+          mountPath: /usr/share/nginx/html
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: registry
+  labels:
+    run: registry
+spec:
+  type: NodePort
+  ports:
+  - port: 5000
+    targetPort: 5000
+    nodePort: 30500
+    protocol: TCP
+  selector:
+    run: registry 
